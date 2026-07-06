@@ -88,6 +88,7 @@ async def run_kick_check(triggered_by: str = "scheduled"):
         return {"error": f"Sheet read failed: {e}"}
 
     if not records:
+        logger.info("Check complete: Kick Queue is empty, nothing to check.")
         return {"kicked": [], "skipped_not_found": [], "errors": []}
 
     headers = list(records[0].keys())
@@ -140,6 +141,15 @@ async def run_kick_check(triggered_by: str = "scheduled"):
             results["errors"].append(f"Row {idx}: kick failed: {e}")
 
     await post_summary(results, triggered_by)
+
+    if not results["kicked"] and not results["errors"]:
+        logger.info("Check complete: no members needed kicking.")
+    else:
+        logger.info(
+            f"Check complete: kicked={len(results['kicked'])}, "
+            f"not_found={len(results['skipped_not_found'])}, errors={len(results['errors'])}"
+        )
+
     return results
 
 
